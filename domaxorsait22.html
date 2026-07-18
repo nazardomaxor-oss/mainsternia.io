@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Майстерня — малюй і збирай</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --charcoal: #211d1b;
+    --wall: #2c2725;
+    --paper: #faf6ec;
+    --brass: #c9843f;
+    --sage: #7c8a6e;
+    --clay: #b6462f;
+    --pin: #e8d9b5;
+    --ink: #2a2420;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background: var(--wall);
+    background-image:
+      radial-gradient(circle at 20% 20%, rgba(255,255,255,0.02), transparent 40%),
+      radial-gradient(circle at 80% 70%, rgba(255,255,255,0.015), transparent 45%);
+    color: var(--paper);
+    font-family: 'Inter', sans-serif;
+    min-height:100vh;
+  }
+  header{
+    padding: 36px 40px 18px;
+    text-align:center;
+  }
+  header h1{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-style:italic;
+    font-size: clamp(28px, 4vw, 44px);
+    margin:0;
+    color: var(--paper);
+    letter-spacing: 0.5px;
+  }
+  header p{
+    margin:8px 0 0;
+    color: #cfc6b8;
+    font-size:14px;
+    letter-spacing:0.3px;
+  }
+
+  .studio{
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 10px 24px 60px;
+    display:flex;
+    flex-direction:column;
+    gap: 34px;
+  }
+
+  /* --- Toolbar --- */
+  .toolbar{
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 16px 20px;
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap: 18px;
+  }
+  .group{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .group label{
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    color:#b9ae9b;
+  }
+  .swatch{
+    width:24px;height:24px;
+    border-radius:50%;
+    border:2px solid rgba(255,255,255,0.25);
+    cursor:pointer;
+    padding:0;
+    transition: transform .15s;
+  }
+  .swatch:hover{ transform: scale(1.12); }
+  .swatch.active{
+    border-color: var(--paper);
+    box-shadow: 0 0 0 2px var(--brass);
+  }
+  input[type=color]{
+    width:28px;height:28px;
+    border:none;
+    background:none;
+    border-radius:50%;
+    overflow:hidden;
+    cursor:pointer;
+  }
+  input[type=range]{
+    accent-color: var(--brass);
+    width:110px;
+  }
+  button.action{
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    font-weight:600;
+    letter-spacing:0.3px;
+    padding:9px 16px;
+    border-radius:8px;
+    border:1px solid rgba(255,255,255,0.15);
+    background: transparent;
+    color: var(--paper);
+    cursor:pointer;
+    transition: background .15s, transform .1s;
+  }
+  button.action:hover{ background: rgba(255,255,255,0.08); }
+  button.action:active{ transform: scale(0.97); }
+  button.primary{
+    background: var(--brass);
+    border-color: var(--brass);
+    color: #241a0c;
+  }
+  button.primary:hover{ background: #d9924f; }
+  button.tool.active{
+    background: var(--clay);
+    border-color: var(--clay);
+    color: white;
+  }
+  .current-color-chip{
+    width:22px;height:22px;
+    border-radius:6px;
+    border:1px solid rgba(255,255,255,0.3);
+    display:inline-block;
+    vertical-align:middle;
+  }
+
+  /* --- Easel / canvas --- */
+  .easel{
+    display:flex;
+    justify-content:center;
+  }
+  .canvas-frame{
+    background: linear-gradient(180deg, #4a3f36, #322a24);
+    padding: 18px;
+    border-radius: 6px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.45);
+  }
+  canvas{
+    display:block;
+    background: var(--paper);
+    border-radius: 2px;
+    cursor: crosshair;
+    touch-action: none;
+    max-width: 100%;
+  }
+  canvas.tool-fill{ cursor: cell; }
+  canvas.tool-eyedropper{ cursor: copy; }
+
+  .save-row{
+    display:flex;
+    justify-content:center;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .save-row input[type=text]{
+    font-family:'Inter',sans-serif;
+    padding:10px 14px;
+    border-radius:8px;
+    border:1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.04);
+    color: var(--paper);
+    font-size:14px;
+    min-width:220px;
+  }
+  .save-row input[type=text]::placeholder{ color:#8a8073; }
+
+  /* --- Gallery / corkboard --- */
+  .gallery-section h2{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:22px;
+    text-align:center;
+    color: var(--paper);
+    margin-bottom: 4px;
+  }
+  .gallery-hint{
+    text-align:center;
+    color:#a89d8c;
+    font-size:13px;
+    margin-bottom:22px;
+  }
+  .corkboard{
+    background: repeating-linear-gradient(45deg, #4d3a2c, #4d3a2c 2px, #543f30 2px, #543f30 4px);
+    border-radius: 10px;
+    padding: 28px;
+    display:flex;
+    flex-wrap:wrap;
+    gap: 26px;
+    justify-content:center;
+    min-height: 140px;
+  }
+  .empty-note{
+    color:#d8cdbb;
+    font-style:italic;
+    font-family:'Fraunces', serif;
+    align-self:center;
+    margin:auto;
+  }
+  .pinned{
+    background: var(--paper);
+    padding: 10px 10px 26px;
+    border-radius: 3px;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.35);
+    width: 150px;
+    position:relative;
+    cursor:pointer;
+    transition: transform .2s, box-shadow .2s;
+  }
+  .pinned:hover{
+    transform: translateY(-4px) scale(1.03) !important;
+    box-shadow: 0 14px 26px rgba(0,0,0,0.45);
+    z-index: 5;
+  }
+  .pinned img{
+    width:100%;
+    display:block;
+    border: 1px solid #e6ddc9;
+  }
+  .pinned .pin-dot{
+    position:absolute;
+    top:-8px; left:50%;
+    transform: translateX(-50%);
+    width:14px;height:14px;
+    border-radius:50%;
+    background: var(--clay);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+  }
+  .pinned .cap{
+    margin-top:8px;
+    font-size:12px;
+    color: var(--ink);
+    text-align:center;
+    font-family:'Inter',sans-serif;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .pinned .del{
+    position:absolute;
+    top:4px; right:4px;
+    background: rgba(0,0,0,0.55);
+    color:white;
+    border:none;
+    width:20px;height:20px;
+    border-radius:50%;
+    font-size:12px;
+    line-height:20px;
+    cursor:pointer;
+    opacity:0;
+    transition: opacity .15s;
+  }
+  .pinned:hover .del{ opacity:1; }
+
+  .status{
+    text-align:center;
+    font-size:12px;
+    color:#8a8073;
+    min-height:16px;
+  }
+
+  footer{
+    text-align:center;
+    color:#6f665a;
+    font-size:11px;
+    padding: 10px 0 30px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Майстерня</h1>
+  <p>Малюй на полотні — і прикрась ним свою стіну</p>
+</header>
+
+<div class="studio">
+
+  <div class="toolbar">
+    <div class="group">
+      <label>Колір</label>
+      <button class="swatch active" style="background:#2a2420" data-color="#2a2420"></button>
+      <button class="swatch" style="background:#c9843f" data-color="#c9843f"></button>
+      <button class="swatch" style="background:#b6462f" data-color="#b6462f"></button>
+      <button class="swatch" style="background:#7c8a6e" data-color="#7c8a6e"></button>
+      <button class="swatch" style="background:#3f5d77" data-color="#3f5d77"></button>
+      <button class="swatch" style="background:#faf6ec" data-color="#faf6ec"></button>
+      <input type="color" id="customColor" value="#2a2420" title="Свій колір">
+      <span class="current-color-chip" id="colorChip" title="Поточний колір"></span>
+    </div>
+
+    <div class="group">
+      <label>Товщина</label>
+      <input type="range" id="brushSize" min="1" max="40" value="4">
+    </div>
+
+    <div class="group">
+      <button class="action tool active" id="brushBtn" data-tool="brush">Пензлик</button>
+      <button class="action tool" id="eraserBtn" data-tool="eraser">Гумка</button>
+      <button class="action tool" id="fillBtn" data-tool="fill">Заливка</button>
+      <button class="action tool" id="eyedropperBtn" data-tool="eyedropper">Піпетка</button>
+    </div>
+
+    <div class="group">
+      <button class="action" id="undoBtn">Скасувати</button>
+      <button class="action" id="clearBtn">Очистити полотно</button>
+    </div>
+  </div>
+
+  <div class="easel">
+    <div class="canvas-frame">
+      <canvas id="board" width="760" height="480"></canvas>
+    </div>
+  </div>
+
+  <div class="save-row">
+    <input type="text" id="titleInput" placeholder="Назва малюнка (необов'язково)">
+    <button class="action primary" id="saveBtn">Пришпилити до стіни</button>
+    <button class="action" id="downloadBtn">Завантажити PNG</button>
+  </div>
+  <div class="status" id="status"></div>
+
+  <div class="gallery-section">
+    <h2>Стіна робіт</h2>
+    <p class="gallery-hint">Клік по малюнку — відкрити його знову на полотні для правок</p>
+    <div class="corkboard" id="corkboard">
+      <div class="empty-note" id="emptyNote">Тут поки що порожньо — намалюй щось і пришпиль першу роботу</div>
+    </div>
+  </div>
+
+</div>
+
+<footer>Роботи зберігаються у твоєму особистому сховищі й лишаються тут між візитами.</footer>
+
+<script>
+const canvas = document.getElementById('board');
+const ctx = canvas.getContext('2d');
+let drawing = false;
+let lastX = 0, lastY = 0;
+let currentColor = '#2a2420';
+let brushSize = 4;
+let currentTool = 'brush'; // brush | eraser | fill | eyedropper
+let history = [];
+
+function fillPaper(){
+  ctx.fillStyle = '#faf6ec';
+  ctx.fillRect(0,0,canvas.width, canvas.height);
+}
+fillPaper();
+pushHistory();
+updateColorChip();
+
+function updateColorChip(){
+  document.getElementById('colorChip').style.background = currentColor;
+}
+
+function pushHistory(){
+  try{
+    history.push(canvas.toDataURL());
+    if(history.length > 30) history.shift();
+  }catch(e){ console.error(e); }
+}
+
+function getPos(e){
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  if(e.touches && e.touches.length){
+    return { x:(e.touches[0].clientX-rect.left)*scaleX, y:(e.touches[0].clientY-rect.top)*scaleY };
+  }
+  return { x:(e.clientX-rect.left)*scaleX, y:(e.clientY-rect.top)*scaleY };
+}
+
+function hexToRgba(hex){
+  const h = hex.replace('#','');
+  const bigint = parseInt(h, 16);
+  return [(bigint>>16)&255, (bigint>>8)&255, bigint&255, 255];
+}
+
+/* ---- Заливка (flood fill) ---- */
+function floodFill(startX, startY, fillColor){
+  const w = canvas.width, h = canvas.height;
+  const imgData = ctx.getImageData(0, 0, w, h);
+  const data = imgData.data;
+  startX = Math.floor(startX); startY = Math.floor(startY);
+  if(startX < 0 || startY < 0 || startX >= w || startY >= h) return;
+
+  const startIdx = (startY * w + startX) * 4;
+  const target = [data[startIdx], data[startIdx+1], data[startIdx+2], data[startIdx+3]];
+  const fill = hexToRgba(fillColor);
+
+  if(target[0]===fill[0] && target[1]===fill[1] && target[2]===fill[2]) return;
+
+  const tolerance = 40;
+  function matches(idx){
+    return Math.abs(data[idx]-target[0])<=tolerance &&
+           Math.abs(data[idx+1]-target[1])<=tolerance &&
+           Math.abs(data[idx+2]-target[2])<=tolerance;
+  }
+
+  const stack = [[startX, startY]];
+  const visited = new Uint8Array(w*h);
+
+  while(stack.length){
+    const [x,y] = stack.pop();
+    if(x<0||y<0||x>=w||y>=h) continue;
+    const pos = y*w+x;
+    if(visited[pos]) continue;
+    const idx = pos*4;
+    if(!matches(idx)) continue;
+    visited[pos] = 1;
+    data[idx] = fill[0]; data[idx+1] = fill[1]; data[idx+2] = fill[2]; data[idx+3] = 255;
+    stack.push([x+1,y]); stack.push([x-1,y]); stack.push([x,y+1]); stack.push([x,y-1]);
+  }
+  ctx.putImageData(imgData, 0, 0);
+}
+
+/* ---- Піпетка (color picker) ---- */
+function pickColor(x, y){
+  const pixel = ctx.getImageData(Math.floor(x), Math.floor(y), 1, 1).data;
+  const hex = '#' + [pixel[0], pixel[1], pixel[2]].map(v => v.toString(16).padStart(2,'0')).join('');
+  currentColor = hex;
+  updateColorChip();
+  document.querySelectorAll('.swatch').forEach(b=>b.classList.remove('active'));
+  document.getElementById('customColor').value = hex;
+  setTool('brush');
+  setStatus('Колір взято з полотна', 1800);
+}
+
+function setTool(tool){
+  currentTool = tool;
+  document.querySelectorAll('.tool').forEach(b=>b.classList.remove('active'));
+  document.getElementById(tool + 'Btn').classList.add('active');
+  canvas.classList.toggle('tool-fill', tool === 'fill');
+  canvas.classList.toggle('tool-eyedropper', tool === 'eyedropper');
+}
+
+function startDraw(e){
+  const p = getPos(e);
+  if(currentTool === 'fill'){
+    floodFill(p.x, p.y, currentColor);
+    pushHistory();
+    e.preventDefault();
+    return;
+  }
+  if(currentTool === 'eyedropper'){
+    pickColor(p.x, p.y);
+    e.preventDefault();
+    return;
+  }
+  drawing = true;
+  lastX = p.x; lastY = p.y;
+  e.preventDefault();
+}
+function stopDraw(){
+  if(drawing) pushHistory();
+  drawing = false;
+}
+function draw(e){
+  if(!drawing) return;
+  if(currentTool === 'fill' || currentTool === 'eyedropper') return;
+  const p = getPos(e);
+  ctx.beginPath();
+  ctx.moveTo(lastX, lastY);
+  ctx.lineTo(p.x, p.y);
+  ctx.strokeStyle = currentTool === 'eraser' ? '#faf6ec' : currentColor;
+  ctx.lineWidth = currentTool === 'eraser' ? brushSize * 2.2 : brushSize;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+  lastX = p.x; lastY = p.y;
+  e.preventDefault();
+}
+
+canvas.addEventListener('mousedown', startDraw);
+canvas.addEventListener('mousemove', draw);
+window.addEventListener('mouseup', stopDraw);
+canvas.addEventListener('touchstart', startDraw, {passive:false});
+canvas.addEventListener('touchmove', draw, {passive:false});
+canvas.addEventListener('touchend', stopDraw);
+
+document.querySelectorAll('.swatch').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.swatch').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentColor = btn.dataset.color;
+    updateColorChip();
+    if(currentTool === 'eyedropper') setTool('brush');
+  });
+});
+document.getElementById('customColor').addEventListener('input', (e)=>{
+  currentColor = e.target.value;
+  updateColorChip();
+  document.querySelectorAll('.swatch').forEach(b=>b.classList.remove('active'));
+  if(currentTool === 'eyedropper') setTool('brush');
+});
+document.getElementById('brushSize').addEventListener('input', (e)=>{
+  brushSize = parseInt(e.target.value, 10);
+});
+
+document.getElementById('brushBtn').addEventListener('click', ()=>setTool('brush'));
+document.getElementById('eraserBtn').addEventListener('click', ()=>setTool('eraser'));
+document.getElementById('fillBtn').addEventListener('click', ()=>setTool('fill'));
+document.getElementById('eyedropperBtn').addEventListener('click', ()=>setTool('eyedropper'));
+
+document.getElementById('clearBtn').addEventListener('click', ()=>{
+  fillPaper();
+  pushHistory();
+});
+document.getElementById('undoBtn').addEventListener('click', ()=>{
+  if(history.length <= 1) return;
+  history.pop();
+  const img = new Image();
+  img.onload = ()=>{ ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(img,0,0); };
+  img.src = history[history.length-1];
+});
+document.getElementById('downloadBtn').addEventListener('click', ()=>{
+  const link = document.createElement('a');
+  link.download = 'malyunok.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+});
+
+/* ---------- Gallery persistence ---------- */
+const corkboard = document.getElementById('corkboard');
+const emptyNote = document.getElementById('emptyNote');
+const statusEl = document.getElementById('status');
+let gallery = [];
+
+function setStatus(msg, clearAfter){
+  statusEl.textContent = msg;
+  if(clearAfter){
+    setTimeout(()=>{ if(statusEl.textContent === msg) statusEl.textContent = ''; }, clearAfter);
+  }
+}
+
+async function loadGallery(){
+  setStatus('Завантажуємо стіну робіт…');
+  try{
+    const res = await window.storage.get('gallery-data', false);
+    gallery = res ? JSON.parse(res.value) : [];
+  }catch(e){
+    gallery = [];
+  }
+  renderGallery();
+  setStatus('', 1);
+}
+
+async function persistGallery(){
+  try{
+    const result = await window.storage.set('gallery-data', JSON.stringify(gallery), false);
+    if(!result){ setStatus('Не вдалося зберегти — спробуй ще раз', 3000); }
+  }catch(e){
+    console.error(e);
+    setStatus('Помилка збереження', 3000);
+  }
+}
+
+function renderGallery(){
+  corkboard.querySelectorAll('.pinned').forEach(n=>n.remove());
+  emptyNote.style.display = gallery.length ? 'none' : 'block';
+  gallery.forEach(item=>{
+    const card = document.createElement('div');
+    card.className = 'pinned';
+    const tilt = (item.id.charCodeAt(0) % 9) - 4;
+    card.style.transform = `rotate(${tilt}deg)`;
+    card.innerHTML = `
+      <div class="pin-dot"></div>
+      <button class="del" title="Видалити">×</button>
+      <img src="${item.data}" alt="${item.title}">
+      <div class="cap">${item.title || 'Без назви'}</div>
+    `;
+    card.querySelector('img').addEventListener('click', ()=>{
+      const img = new Image();
+      img.onload = ()=>{ ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(img,0,0,canvas.width,canvas.height); pushHistory(); };
+      img.src = item.data;
+      setStatus('Малюнок відкрито на полотні для правок', 2500);
+    });
+    card.querySelector('.del').addEventListener('click', async (e)=>{
+      e.stopPropagation();
+      gallery = gallery.filter(g=>g.id !== item.id);
+      renderGallery();
+      await persistGallery();
+    });
+    corkboard.appendChild(card);
+  });
+}
+
+document.getElementById('saveBtn').addEventListener('click', async ()=>{
+  const title = document.getElementById('titleInput').value.trim();
+  const entry = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+    title: title,
+    data: canvas.toDataURL('image/png')
+  };
+  gallery.unshift(entry);
+  renderGallery();
+  document.getElementById('titleInput').value = '';
+  setStatus('Зберігаємо…');
+  await persistGallery();
+  setStatus('Пришпилено до стіни ✓', 2000);
+});
+
+loadGallery();
+</script>
+
+</body>
+</html>
